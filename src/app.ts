@@ -2,6 +2,7 @@ import express, { Express, NextFunction, Request, Response } from 'express';
 import {createServer} from "http";
 import puppeteer from 'puppeteer';
 
+
 const app: Express = express();
 const port: number = Number(process.env.PORT) || 3000;
 const server = createServer(app);
