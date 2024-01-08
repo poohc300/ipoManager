@@ -1,29 +1,36 @@
 import express, { Express, NextFunction, Request, Response } from 'express';
-import {createServer} from "http";
+import { createServer } from "http";
 import puppeteer from 'puppeteer';
-
+import { IpoController } from './controllers/ipoController';
 
 const app: Express = express();
 const port: number = Number(process.env.PORT) || 3000;
-const server = createServer(app);
 
-app.use(function(req: Request, res: Response, next: NextFunction) {
+
+// initialize controller
+const ipoController = new IpoController()
+
+
+app.use(function (req: Request, res: Response, next: NextFunction) {
     res.setHeader("Content-Type", "application/json");
     next();
 });
 
 app.use(express.json());
- 
+
 // express에는 json 데이터를 파싱하는 모듈이 내장되어있다.
 // 하지만 json만 되고 x-www-form-urlencoded를 파싱하기 위해서 아래를 확장해야 한다.
 app.use(express.urlencoded({
-  extended: true
+    extended: true
 }))
- 
+
+const server = createServer(app);
+
+
 const callPage = async (url: string, element: string) => {
     const browser = await puppeteer.launch({
-        headless : false
-      });
+        headless: false
+    });
     const page = await browser.newPage();
     await page.goto(url);
 
@@ -40,9 +47,9 @@ const callPage = async (url: string, element: string) => {
     return content;
 }
 
-app.get('/ipoSchedule', async(req, res) => {
+app.get('/ipoSchedule', async (req, res) => {
     // 공모주 청약 일정
-   
+
     const baseUrl = 'http://www.38.co.kr/html/fund/index.htm?o=k&page=1';
     const element = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody > tr';
     const element2 = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody';
@@ -53,13 +60,17 @@ app.get('/ipoSchedule', async(req, res) => {
 
 });
 
-app.get('/thinkpool/marketFeatureNote', async(req, res) => {
+app.get('/thinkpool/marketFeatureNote', async (req, res) => {
     const url = 'https://www.thinkpool.com/';
     const element = '#content > div:nth-child(6) > div > div > div.main-items-tab > div:nth-child(2) > div.tab-pane.in.active > div.table_w.mt-20 > table';
 
     let result = await callPage(url, element);
     console.log(result);
     res.json(result);
+})
+
+app.get('/data', (req, res) => {
+    ipoController.fetchAllData(req, res);
 })
 
 server.listen(3000, () => {

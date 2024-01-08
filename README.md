@@ -27,3 +27,10 @@ https://velog.io/@chojs28/Git-%EC%BB%A4%EB%B0%8B-%EB%A9%94%EC%8B%9C%EC%A7%80-%EA
 | refactor |코드 리팩토링에 대한 커밋|
 | test |테스트 코드 수정에 대한 커밋|
 | perf |성능 개선에 대한 커밋|
+
+
+## 디자인 패턴
+https://velog.io/@ehgks0000/NodeJS-Singleton-pattern
+
+# node-postgres
+yarn add pg

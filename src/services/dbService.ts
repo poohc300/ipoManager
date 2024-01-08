@@ -1,39 +1,21 @@
-import { Client } from 'pg';
+import { Pool, QueryResult } from 'pg';
+import { dbConfig } from '../config';
 
 export class DbService {
-    private client: Client;
+    private pool: Pool;
 
-    constructor(private dbConfig: Record<string, any>) {
-        this.client = new Client(dbConfig)''
+    constructor() {
+        this.pool = new Pool(dbConfig);
     }
 
-    async connect() {
+    async query<T>(sql: string): Promise<T[]> {
+        const client = await this.pool.connect();
         try {
-            await this.client.connect();
-        } catch (err) {
-            console.error('Error connectiong to PostgreSQL:', err);
-            throw err;
-        }
-    }
-
-    async disconnect() {
-        try {
-            await this.client.end();
-            console.log("Disconnected from PostrgreSQL");
-            
-        } catch (err) {
-            console.error("Error disconnection from PostgreSQL: ", err);
-            throw err;
-        }
-    }
-
-    async query(sql: string) {
-        try {
-            const result = await this.client.query(sql);
-            console.log('Query Result: ', result.rows)
-        } catch (err) {
-            console.error('Error executing query: ', err);
-            throw err;
+            const result: QueryResult<T> = await client.query<T>(sql);
+            console.log('Query Result:', result.rows);
+            return result.rows;
+        } finally {
+            client.release(); // 커넥션을 풀에 반환
         }
     }
 }
