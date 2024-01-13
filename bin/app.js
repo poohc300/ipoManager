@@ -15,9 +15,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const http_1 = require("http");
 const puppeteer_1 = __importDefault(require("puppeteer"));
+const ipoController_1 = require("./controllers/ipoController");
 const app = (0, express_1.default)();
 const port = Number(process.env.PORT) || 3000;
-const server = (0, http_1.createServer)(app);
+// initialize controller
+const ipoController = new ipoController_1.IpoController();
 app.use(function (req, res, next) {
     res.setHeader("Content-Type", "application/json");
     next();
@@ -28,6 +30,7 @@ app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({
     extended: true
 }));
+const server = (0, http_1.createServer)(app);
 const callPage = (url, element) => __awaiter(void 0, void 0, void 0, function* () {
     const browser = yield puppeteer_1.default.launch({
         headless: false
@@ -57,6 +60,15 @@ app.get('/thinkpool/marketFeatureNote', (req, res) => __awaiter(void 0, void 0, 
     console.log(result);
     res.json(result);
 }));
+app.get('/data', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("들어왔다");
+    const result = yield ipoController.fetchAllData(req, res);
+    console.log(result);
+    res.json(result);
+}));
+app.get('/welcome', (req, res, next) => {
+    res.send('welcome!');
+});
 server.listen(3000, () => {
     console.log("server listening on 3000");
 });

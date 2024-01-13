@@ -8,10 +8,10 @@ export class DbService {
         this.pool = new Pool(dbConfig);
     }
 
-    async query<T>(sql: string): Promise<T[]> {
+    async query(sql: string): Promise<any[]> {
         const client = await this.pool.connect();
         try {
-            const result: QueryResult<T> = await client.query<T>(sql);
+            const result: QueryResult<any> = await client.query<any>(sql);
             console.log('Query Result:', result.rows);
             return result.rows;
         } finally {
