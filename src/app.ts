@@ -2,6 +2,7 @@ import express, { Express, NextFunction, Request, Response } from 'express';
 import { createServer } from "http";
 import puppeteer from 'puppeteer';
 import { IpoController } from './controllers/ipoController';
+import { log } from 'console';
 
 const app: Express = express();
 const port: number = Number(process.env.PORT) || 3000;
@@ -47,6 +48,53 @@ const callPage = async (url: string, element: string) => {
     return content;
 }
 
+const getOne = async (index: number, baseUrl: string) => {
+    let tdIndex = index;
+    let trIndex = 1;
+    let url = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(' + 1 + ')';
+
+    const browser = await puppeteer.launch({
+        headless: false
+    });
+    let data = {
+        ipoName: '',
+        ipoDate: '',
+        confirmedPublicOfferingPrice: 0,
+        publicOfferingPrice: 0,
+        competitionRate: '',
+        underWriter: ''
+    };
+
+    const page = await browser.newPage();
+    await page.goto(baseUrl);
+    // nth-child(index)를 이용해 원하는 줄을 선택할 수 있도록 한다.
+
+
+
+    data.ipoName = await page.$eval(url, (data) => data.textContent);
+
+    data.ipoDate = await page.$eval(url, (data) => data.textContent);
+    tdIndex = 2;
+    data.confirmedPublicOfferingPrice = await page.$eval(url, (data) => data.textContent);
+    tdIndex = 3;
+    data.publicOfferingPrice = await page.$eval(url, (data) => data.textContent);
+    tdIndex = 4;
+    data.competitionRate = await page.$eval(url, (data) => data.textContent);
+    tdIndex = 5;
+    data.underWriter = await page.$eval(url, (data) => data.textContent);
+    tdIndex = 6;
+
+    console.log(">>>>>", data);
+
+    return Promise.resolve(data);
+
+}
+app.get('/test', async (req, res) => {
+    const baseUrl = 'http://www.38.co.kr/html/fund/index.htm?o=k&page=1';
+
+    getOne(1, baseUrl);
+});
+
 app.get('/ipoSchedule', async (req, res) => {
     // 공모주 청약 일정
     let data: string[] = [];
@@ -54,16 +102,14 @@ app.get('/ipoSchedule', async (req, res) => {
     const baseUrl = 'http://www.38.co.kr/html/fund/index.htm?o=k&page=1';
     const latestOne = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody > tr';
     const onePage = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody';
+    //const rows = await callPage(baseUrl, onePage)
 
-    const rows = await callPage(baseUrl, onePage)
-    const lines = rows.trim().split('\n');
-    // 필요한 정보를 담을 배열을 선언합니다.
-    data = lines;
+    //res.json(data);
+    let index = 1;
+    let url = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(' + index + ')> td:nth-child(1)';
+    const result = await getOne(index, url);
 
-
-    console.log(data);
-    res.json(data);
-
+    return res.json(result)
 });
 
 app.get('/thinkpool/marketFeatureNote', async (req, res) => {
