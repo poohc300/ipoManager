@@ -49,9 +49,7 @@ const callPage = async (url: string, element: string) => {
 }
 
 const getOne = async (index: number, baseUrl: string) => {
-    let tdIndex = index;
-    let trIndex = 1;
-    let url = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(' + 1 + ')';
+    let url = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody';
 
     const browser = await puppeteer.launch({
         headless: false
@@ -62,29 +60,31 @@ const getOne = async (index: number, baseUrl: string) => {
         confirmedPublicOfferingPrice: 0,
         publicOfferingPrice: 0,
         competitionRate: '',
-        underWriter: ''
+        underWriter: '',
+
     };
 
     const page = await browser.newPage();
     await page.goto(baseUrl);
-    // nth-child(index)를 이용해 원하는 줄을 선택할 수 있도록 한다.
 
+    const tbodtHandle = await page.$(url);
+    const trHandles = await tbodtHandle?.$$('tr');
 
+    const tableData = [];
+    for (const trHandle of trHandles || []) {
+        const tdHandles = await trHandle.$$('td');
+        data = {
+            ipoName: await page.evaluate(td => td.textContent.trim(), tdHandles[0]),
+            ipoDate: await page.evaluate(td => td.textContent.trim(), tdHandles[1]),
+            confirmedPublicOfferingPrice: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[2])),
+            publicOfferingPrice: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[3])),
+            competitionRate: await page.evaluate(td => td.textContent.trim(), tdHandles[4]),
+            underWriter: await page.evaluate(td => td.textContent.trim(), tdHandles[5]),
+        };
+        tableData.push(data)
+    }
+    console.log(tableData);
 
-    data.ipoName = await page.$eval(url, (data) => data.textContent);
-
-    data.ipoDate = await page.$eval(url, (data) => data.textContent);
-    tdIndex = 2;
-    data.confirmedPublicOfferingPrice = await page.$eval(url, (data) => data.textContent);
-    tdIndex = 3;
-    data.publicOfferingPrice = await page.$eval(url, (data) => data.textContent);
-    tdIndex = 4;
-    data.competitionRate = await page.$eval(url, (data) => data.textContent);
-    tdIndex = 5;
-    data.underWriter = await page.$eval(url, (data) => data.textContent);
-    tdIndex = 6;
-
-    console.log(">>>>>", data);
 
     return Promise.resolve(data);
 
