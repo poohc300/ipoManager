@@ -1,15 +1,9 @@
 import express, { Express, NextFunction, Request, Response } from 'express';
 import { createServer } from "http";
-import puppeteer from 'puppeteer';
 import { IpoController } from './controllers/ipoController';
-import { log } from 'console';
-
 const app: Express = express();
 const port: number = Number(process.env.PORT) || 3000;
 
-
-// initialize controller
-const ipoController = new IpoController()
 
 
 app.use(function (req: Request, res: Response, next: NextFunction) {
@@ -27,113 +21,9 @@ app.use(express.urlencoded({
 
 const server = createServer(app);
 
+// initialize controller
+const ipoController = new IpoController(app)
 
-const callPage = async (url: string, element: string) => {
-    const browser = await puppeteer.launch({
-        headless: false
-    });
-    const page = await browser.newPage();
-    await page.goto(url);
-
-    const content = await page.$eval(
-        element,
-        (el) => {
-            return el.textContent;
-        }
-    )
-
-    await page.close();
-    await browser.close();
-
-    return content;
-}
-
-const getOne = async (index: number, baseUrl: string) => {
-    let url = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody';
-
-    const browser = await puppeteer.launch({
-        headless: false
-    });
-    let data = {
-        ipoName: '',
-        ipoDate: '',
-        confirmedPublicOfferingPrice: 0,
-        publicOfferingPrice: 0,
-        competitionRate: '',
-        underWriter: '',
-
-    };
-
-    const page = await browser.newPage();
-    await page.goto(baseUrl);
-
-    const tbodtHandle = await page.$(url);
-    const trHandles = await tbodtHandle?.$$('tr');
-
-    const tableData = [];
-    for (const trHandle of trHandles || []) {
-        const tdHandles = await trHandle.$$('td');
-        data = {
-            ipoName: await page.evaluate(td => td.textContent.trim(), tdHandles[0]),
-            ipoDate: await page.evaluate(td => td.textContent.trim(), tdHandles[1]),
-            confirmedPublicOfferingPrice: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[2])),
-            publicOfferingPrice: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[3])),
-            competitionRate: await page.evaluate(td => td.textContent.trim(), tdHandles[4]),
-            underWriter: await page.evaluate(td => td.textContent.trim(), tdHandles[5]),
-        };
-        tableData.push(data)
-    }
-    console.log(tableData);
-
-
-    return Promise.resolve(data);
-
-}
-app.get('/test', async (req, res) => {
-    const baseUrl = 'http://www.38.co.kr/html/fund/index.htm?o=k&page=1';
-
-    getOne(1, baseUrl);
-});
-
-app.get('/ipoSchedule', async (req, res) => {
-    // 공모주 청약 일정
-    let data: string[] = [];
-
-    const baseUrl = 'http://www.38.co.kr/html/fund/index.htm?o=k&page=1';
-    const latestOne = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody > tr';
-    const onePage = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody';
-    //const rows = await callPage(baseUrl, onePage)
-
-    //res.json(data);
-    let index = 1;
-    let url = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(' + index + ')> td:nth-child(1)';
-    const result = await getOne(index, url);
-
-    return res.json(result)
-});
-
-app.get('/thinkpool/marketFeatureNote', async (req, res) => {
-    const url = 'https://www.thinkpool.com/';
-    const element = '#content > div:nth-child(6) > div > div > div.main-items-tab > div:nth-child(2) > div.tab-pane.in.active > div.table_w.mt-20 > table';
-
-    let result = await callPage(url, element);
-    result = result.split('\n')
-    console.log(result);
-    res.json(result);
-})
-
-app.get('/data', async (req, res) => {
-    console.log("들어왔다");
-
-    const result = await ipoController.fetchAllData(req, res);
-    console.log(result);
-
-    res.json(result);
-})
-
-app.get('/welcome', (req: Request, res: Response, next: NextFunction) => {
-    res.send('welcome!');
-});
 
 server.listen(3000, () => {
     console.log("server listening on 3000");
