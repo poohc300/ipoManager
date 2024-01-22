@@ -23,3 +23,9 @@ export interface IpoData {
     under_writer VARCHAR(255) NOT NULL -- 주간사 (예시: 최대 255자)
 );
  */
+
+export interface WebsiteInfo {
+    baseUrl: string, // 기본 주소
+    element: string, // html 태그
+    pageNumber: number, // 페이지 번호
+}

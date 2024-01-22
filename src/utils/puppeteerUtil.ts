@@ -1,12 +1,14 @@
 import puppeteer from 'puppeteer';
+import { WebsiteInfo, IpoData } from '../models/ipoModel';
+import moment from 'moment';
 
-export default function puppeteerUtil(props: { url: string, element: string, index: number, baseUrl: string }) {
+export default async function scrapeWebsiteData(websiteInfo: WebsiteInfo): Promise<IpoData[]> {
     /**
      * 
      * @param props 
      * @returns 
      */
-    const { url, element, baseUrl } = props;
+    const { element, baseUrl, pageNumber } = websiteInfo;
 
     // const callPage = async (url: string, element: string) => {
     //     const browser = await puppeteer.launch({
@@ -28,42 +30,57 @@ export default function puppeteerUtil(props: { url: string, element: string, ind
     //     return content;
     // }
 
-    const getOne = async (baseUrl: string) => {
-        let data = {
-            ipoName: '',
-            ipoDate: '',
-            confirmedPublicOfferingPrice: 0,
-            publicOfferingPrice: 0,
-            competitionRate: '',
-            underWriter: '',
+    // id: number; // 시퀀스
+    // ipo_name: string; // 공모주 이름
+    // ipo_date: Date; // 공모주 기간
+    // ipo_date_from: Date; // 공모주 시작날짜
+    // ipo_date_to: Date; // 공모주 종료날짜
+    // confirmed_public_offering_price: number; // 확정공모가
+    // public_offering_price: number; // 희망공모가
+    // competition_rate: string; // 청약경쟁률
+    // under_writer: string; // 주간사
 
+    let data = {
+        id: 0,
+        ipo_name: '',
+        ipo_date: new Date(),
+        ipo_date_from: new Date(),
+        ipo_date_to: new Date(),
+        confirmed_public_offering_price: 0,
+        public_offering_price: 0,
+        competition_rate: '',
+        under_writer: '',
+
+    };
+    const result = [];
+    const tbodyElement = element;
+
+    const browser = await puppeteer.launch({
+        headless: false
+    });
+
+    const page = await browser.newPage();
+    await page.goto(baseUrl);
+
+    const tbodtHandle = await page.$(tbodyElement);
+    const trHandles = await tbodtHandle?.$$('tr');
+
+    for (const trHandle of trHandles || []) {
+        const tdHandles = await trHandle.$$('td');
+        data = {
+            id: 0,
+            ipo_name: await page.evaluate(td => td.textContent.trim(), tdHandles[0]),
+            ipo_date: moment(await page.evaluate(td => td.textContent.trim(), tdHandles[1])).toDate(),
+            ipo_date_from: moment().toDate(),
+            ipo_date_to: moment().toDate(),
+            confirmed_public_offering_price: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[2])),
+            public_offering_price: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[3])),
+            competition_rate: await page.evaluate(td => td.textContent.trim(), tdHandles[4]),
+            under_writer: await page.evaluate(td => td.textContent.trim(), tdHandles[5]),
         };
-        const result = [];
-        const tbodyElement = element;
-
-        const browser = await puppeteer.launch({
-            headless: false
-        });
-
-        const page = await browser.newPage();
-        await page.goto(baseUrl);
-
-        const tbodtHandle = await page.$(tbodyElement);
-        const trHandles = await tbodtHandle?.$$('tr');
-
-        for (const trHandle of trHandles || []) {
-            const tdHandles = await trHandle.$$('td');
-            data = {
-                ipoName: await page.evaluate(td => td.textContent.trim(), tdHandles[0]),
-                ipoDate: await page.evaluate(td => td.textContent.trim(), tdHandles[1]),
-                confirmedPublicOfferingPrice: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[2])),
-                publicOfferingPrice: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[3])),
-                competitionRate: await page.evaluate(td => td.textContent.trim(), tdHandles[4]),
-                underWriter: await page.evaluate(td => td.textContent.trim(), tdHandles[5]),
-            };
-            result.push(data)
-        }
-        return result;
+        result.push(data)
     }
+    return result;
+
 
 }

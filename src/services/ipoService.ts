@@ -1,15 +1,16 @@
 import { DbService } from "./dbService";
-import { IpoData } from "../models/ipoModel";
-import puppeteerUtil from '../utils/puppeteerUtil';
+import { IpoData, WebsiteInfo } from "../models/ipoModel";
+import scrapeWebsiteData from '../utils/puppeteerUtil';
+import { log } from "console";
 
 export class IpoService {
     private dbService: DbService;
-    private baseUrl = 'http://www.38.co.kr/html/fund/index.htm?o=k&page=1';
-    private element = 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody';
 
     constructor() {
         this.dbService = new DbService();
+
     }
+
 
     async fetchAllData<T>(): Promise<T[]> {
         try {
@@ -21,10 +22,24 @@ export class IpoService {
         }
     }
 
-    async saveData(data: IpoData[]): Promise<IpoData[]> {
+    async getAndSaveData(websiteInfo: WebsiteInfo): Promise<IpoData[]> {
         try {
+            const ipoData = await this.getIpoData(websiteInfo);
 
-            const values = data.map(item => {
+            const result = await this.saveData(ipoData)
+
+            return result;
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
+    }
+
+    async saveData(ipoData: IpoData[]): Promise<IpoData[]> {
+        try {
+            const values = ipoData.map(item => {
+                console.log(item);
+
                 return `(${item.id}, '${item.ipo_name}', '${item.ipo_date}', '${item.ipo_date_from}', '${item.ipo_date_to}', ${item.confirmed_public_offering_price}, ${item.public_offering_price}, '${item.competition_rate}', '${item.under_writer}')`;
             }).join(',');
 
@@ -39,12 +54,15 @@ export class IpoService {
         }
     }
 
-    async getIpoData() {
+    async getIpoData(websiteInfo: WebsiteInfo): Promise<IpoData[]> {
 
         try {
-            const result = await puppeteerUtil.getOne(this.baseUrl);
+            const result = await scrapeWebsiteData(websiteInfo);
+
+            return result;
         } catch (error) {
             console.error(error)
+            return [];
         }
     }
 }

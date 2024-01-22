@@ -1,15 +1,29 @@
 import { Express, Request, Response } from 'express';
 import { IpoService } from '../services/ipoService';
+import { WebsiteInfo } from '../models/ipoModel';
 
 export class IpoController {
+    private ipoService: IpoService;
+    private websiteInfo: WebsiteInfo;
+
     constructor(private app: Express) {
+        this.ipoService = new IpoService();
+        this.websiteInfo = {
+            baseUrl: 'http://www.38.co.kr/html/fund/index.htm?o=k&page=1',
+            element: 'body > table:nth-child(9) > tbody > tr > td > table:nth-child(2) > tbody > tr > td:nth-child(1) > table:nth-child(11) > tbody > tr:nth-child(2) > td > table > tbody',
+            pageNumber: 1
+        }
         this.setupRoutes();
+
     }
 
+
     private setupRoutes() {
-        this.app.get('/ipo', this.getAllIpo);
+        //this.app.get('/ipo', this.getAllIpo);
         this.app.get('ipo/:date', this.getUserByDate)
-        this.app.post('/ipo', this.createIpo);
+        // this.app.post('/ipo', this.createIpo);
+        this.app.get('/ipo', this.createIpo);
+
         //this.app.put('/ipo/:id', this.updateUser);
         //this.app.delete('/ipo/:id', this.deleteUser);
     }
@@ -25,10 +39,14 @@ export class IpoController {
         res.send('200');
     }
 
-    private createIpo(req: Request, res: Response) {
+    private createIpo = async (req: Request, res: Response) => {
         // 로직: 지금 현재 ipo 첫 페이지 데이터 크롤링해서 저장하는 코드
 
-        res.send('200');
+
+        const result = await this.ipoService.getAndSaveData(this.websiteInfo);
+
+
+        res.json(result);
     }
 
     /*
