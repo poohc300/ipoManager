@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config(); // .env 파일에서 환경 변수 로드
 
 interface DbConfig {
     user: string;
@@ -17,3 +17,4 @@ export const dbConfig: DbConfig = {
     password: process.env.DB_PASSWORD || '',
     port: parseInt(process.env.DB_PORT || '5432', 10),
 };
+

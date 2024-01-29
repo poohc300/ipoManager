@@ -41,11 +41,8 @@ export default async function scrapeWebsiteData(websiteInfo: WebsiteInfo): Promi
     // under_writer: string; // 주간사
 
     let data = {
-        id: 0,
         ipo_name: '',
-        ipo_date: new Date(),
-        ipo_date_from: new Date(),
-        ipo_date_to: new Date(),
+        ipo_date: '',
         confirmed_public_offering_price: 0,
         public_offering_price: 0,
         competition_rate: '',
@@ -68,15 +65,13 @@ export default async function scrapeWebsiteData(websiteInfo: WebsiteInfo): Promi
     for (const trHandle of trHandles || []) {
         const tdHandles = await trHandle.$$('td');
         data = {
-            id: 0,
             ipo_name: await page.evaluate(td => td.textContent.trim(), tdHandles[0]),
-            ipo_date: moment(await page.evaluate(td => td.textContent.trim(), tdHandles[1])).toDate(),
-            ipo_date_from: moment().toDate(),
-            ipo_date_to: moment().toDate(),
-            confirmed_public_offering_price: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[2])),
-            public_offering_price: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[3])),
-            competition_rate: await page.evaluate(td => td.textContent.trim(), tdHandles[4]),
-            under_writer: await page.evaluate(td => td.textContent.trim(), tdHandles[5]),
+            // ipo_date: moment(await page.evaluate(td => td.textContent.trim(), tdHandles[1])).toDate(),
+            ipo_date: await page.evaluate(td => td.textContent.trim(), tdHandles[1]) || '',
+            confirmed_public_offering_price: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[2])) || 0,
+            public_offering_price: parseInt(await page.evaluate(td => td.textContent.trim().replace(/,/g, ''), tdHandles[3])) || 0,
+            competition_rate: await page.evaluate(td => td.textContent.trim(), tdHandles[4]) || '',
+            under_writer: await page.evaluate(td => td.textContent.trim(), tdHandles[5]) || '',
         };
         result.push(data)
     }

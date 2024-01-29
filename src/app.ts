@@ -1,6 +1,10 @@
+import dotenv from 'dotenv';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import { createServer } from "http";
 import { IpoController } from './controllers/ipoController';
+
+dotenv.config(); // .env 파일에서 환경 변수 로드
+
 const app: Express = express();
 const port: number = Number(process.env.PORT) || 3000;
 
