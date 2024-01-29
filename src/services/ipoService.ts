@@ -14,7 +14,7 @@ export class IpoService {
 
     async fetchAllData(): Promise<IpoData[]> {
         try {
-            const result = await this.dbService.query<IpoData>('SELECT * FROM "ipoManager".iposchedule');
+            const result = await this.dbService.query<IpoData>('SELECT * FROM "ipoManager".iposchedule ORDER BY ipo_date DESC');
             return result;
         } catch (err) {
             console.error('Error in IpoService: ', err);

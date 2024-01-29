@@ -51,13 +51,13 @@ export default async function scrapeWebsiteData(websiteInfo: WebsiteInfo): Promi
     };
     const result = [];
     const tbodyElement = element;
-
+    const url = baseUrl + pageNumber;
     const browser = await puppeteer.launch({
         headless: false
     });
 
     const page = await browser.newPage();
-    await page.goto(baseUrl);
+    await page.goto(url);
 
     const tbodtHandle = await page.$(tbodyElement);
     const trHandles = await tbodtHandle?.$$('tr');
